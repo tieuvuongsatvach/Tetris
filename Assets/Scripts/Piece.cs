@@ -21,26 +21,26 @@ public class Piece : MonoBehaviour
         this.board = board;
         this.position = position;
         this.data = data;
-        this.rotationIndex = 0;
-        this.stepTime = Time.time + this.stepDelay;
-        this.lockTime = 0f;
+        rotationIndex = 0;
+        stepTime = Time.time + stepDelay;
+        lockTime = 0f;
 
-        if (this.cells == null)
+        if (cells == null)
         {
-            this.cells = new Vector3Int[data.cells.Length];
+            cells = new Vector3Int[data.cells.Length];// data.cells.Length = 4
         }
 
         for (int i = 0; i < data.cells.Length; i++)
         {
-            this.cells[i] = (Vector3Int)data.cells[i];
+            cells[i] = (Vector3Int)data.cells[i];
         }
     }
 
     private void Update()
     {
-        this.board.Clear(this);
+        board.Clear(this);
 
-        this.lockTime += Time.deltaTime;
+        lockTime += Time.deltaTime;
 
         if (Input.GetKeyDown(KeyCode.Q))
         {
@@ -70,21 +70,21 @@ public class Piece : MonoBehaviour
             HardDrop();
         }
 
-        if (Time.time >= this.stepTime)
+        if (Time.time >= stepTime)
         {
             Step();
         }
 
-        this.board.Set(this);
+        board.Set(this);
     }
 
     private void Step()
     {
-        this.stepTime = Time.time + this.stepDelay;
+        stepTime = Time.time + stepDelay;
 
         Move(Vector2Int.down);
 
-        if (this.lockTime >= this.lockDelay)
+        if (lockTime >= lockDelay)
         {
             Lock();
         }
@@ -92,9 +92,9 @@ public class Piece : MonoBehaviour
 
     private void Lock()
     {
-        this.board.Set(this);
-        this.board.ClearLines();
-        this.board.SpawnPiece();
+        board.Set(this);
+        board.ClearLines();
+        board.SpawnPiece();
     }
 
     private void HardDrop()
@@ -109,16 +109,16 @@ public class Piece : MonoBehaviour
 
     private bool Move(Vector2Int translation)
     {
-        Vector3Int newPosition = this.position;
+        Vector3Int newPosition = position;
         newPosition.x += translation.x;
         newPosition.y += translation.y;
 
-        bool valid = this.board.IsValidPosition(this, newPosition);
+        bool valid = board.IsValidPosition(this, newPosition);
 
         if (valid)
         {
-            this.position = newPosition;
-            this.lockTime = 0f;
+            position = newPosition;
+            lockTime = 0f;
         }
 
         return valid;
@@ -126,27 +126,27 @@ public class Piece : MonoBehaviour
 
     private void Rotate(int direction)
     {
-        int originalRotation = this.rotationIndex;
-        this.rotationIndex = Wrap(this.rotationIndex + direction, 0, 4);
+        int originalRotation = rotationIndex;
+        rotationIndex = Wrap(rotationIndex + direction, 0, 4);// 4 state tetromino
 
         ApplyRotationMatrix(direction);
 
-        if (!TestWallKicks(this.rotationIndex, direction))
+        if (!TestWallKicks(rotationIndex, direction))
         {
-            this.rotationIndex = originalRotation;
+            rotationIndex = originalRotation;
             ApplyRotationMatrix(-direction);
         }
     }
 
     private void ApplyRotationMatrix(int direction)
     {
-        for (int i = 0; i < this.cells.Length; i++)
+        for (int i = 0; i < cells.Length; i++)
         {
-            Vector3 cell = this.cells[i];
+            Vector3 cell = cells[i];
 
             int x, y;
 
-            switch (this.data.tetromino)
+            switch (data.tetromino)
             {
                 case Tetromino.I:
                 case Tetromino.O:
@@ -161,7 +161,7 @@ public class Piece : MonoBehaviour
                     break;
             }
 
-            this.cells[i] = new Vector3Int(x, y, 0);
+            cells[i] = new Vector3Int(x, y, 0);
         }
     }
 
@@ -169,9 +169,9 @@ public class Piece : MonoBehaviour
     {
         int wallKickIndex = GetWallKickIndex(rotationIndex, rotationDirection);
 
-        for (int i = 0; i < this.data.wallKicks.GetLength(1); i++)
+        for (int i = 0; i < data.wallKicks.GetLength(1); i++)
         {
-            Vector2Int translation = this.data.wallKicks[wallKickIndex, i];
+            Vector2Int translation = data.wallKicks[wallKickIndex, i];
 
             if (Move(translation))
             {
@@ -190,10 +190,10 @@ public class Piece : MonoBehaviour
         {
             wallKickIndex--;
         }
-        return Wrap(wallKickIndex, 0, this.data.wallKicks.GetLength(0));
+        return Wrap(wallKickIndex, 0, data.wallKicks.GetLength(0));
     }
 
-    private int Wrap(int input, int min, int max)
+    private int Wrap(int input, int min, int max)//scroll 0->1->2->3->0
     {
         if (input < min)
         {

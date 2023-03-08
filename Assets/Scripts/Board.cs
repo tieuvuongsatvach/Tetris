@@ -1,33 +1,40 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 public class Board : MonoBehaviour
 {
+    [SerializeField] private Text text;
+    private int score;
+
     public Tilemap tilemap { get; private set; }
     public Piece acctivePiece { get; private set; }
     [SerializeField] private TetrominoData[] tetrominos;
-    public Vector3Int spawnPosition;
-    public Vector2Int boardSize = new Vector2Int(10, 20);
+    private Vector3Int spawnPosition = new Vector3Int(-1, 8, 0);
+    public Vector2Int boardSize { get; private set; } = new Vector2Int(10, 20);
 
     public RectInt Bounds
     {
         get
         {
-            Vector2Int position = new Vector2Int(-this.boardSize.x / 2, -this.boardSize.y / 2);
-            return new RectInt(position, this.boardSize);
+            Vector2Int position = new Vector2Int(-boardSize.x / 2, -boardSize.y / 2);
+            return new RectInt(position, boardSize);
         }
     }
 
     private void Awake()
     {
-        this.tilemap = GetComponentInChildren<Tilemap>();
-        this.acctivePiece = GetComponentInChildren<Piece>();
+        score = 0;
+        SetScoreText($"Score: {score}");
+        tilemap = GetComponentInChildren<Tilemap>();
+        acctivePiece = GetComponentInChildren<Piece>();
 
-        for (int i = 0; i < this.tetrominos.Length; i++)
+        for (int i = 0; i < tetrominos.Length; i++)
         {
-            this.tetrominos[i].Initialize();
+            tetrominos[i].Initialize();
         }
     }
 
@@ -38,14 +45,14 @@ public class Board : MonoBehaviour
 
     public void SpawnPiece()
     {
-        int random = Random.Range(0, this.tetrominos.Length);
-        TetrominoData data = this.tetrominos[random];
+        int random = Random.Range(0, tetrominos.Length);
+        TetrominoData data = tetrominos[random];
 
-        this.acctivePiece.Initialize(this, this.spawnPosition, data);
+        acctivePiece.Initialize(this, spawnPosition, data);
 
-        if (IsValidPosition(this.acctivePiece, this.spawnPosition))
+        if (IsValidPosition(acctivePiece, spawnPosition))
         {
-            Set(this.acctivePiece);
+            Set(acctivePiece);
         }
         else
         {
@@ -55,7 +62,9 @@ public class Board : MonoBehaviour
 
     private void GameOver()
     {
-        this.tilemap.ClearAllTiles();
+        tilemap.ClearAllTiles();
+        score = 0;
+        SetScoreText($"Score: {score}");
     }
 
     public void Set(Piece piece)
@@ -63,7 +72,7 @@ public class Board : MonoBehaviour
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + piece.position;
-            this.tilemap.SetTile(tilePosition, piece.data.tile);
+            tilemap.SetTile(tilePosition, piece.data.tile);
         }
     }
 
@@ -72,24 +81,24 @@ public class Board : MonoBehaviour
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + piece.position;
-            this.tilemap.SetTile(tilePosition, null);
+            tilemap.SetTile(tilePosition, null);
         }
     }
 
     public bool IsValidPosition(Piece piece, Vector3Int position)
     {
-        RectInt bounds = this.Bounds;
+        RectInt bounds = Bounds;
 
         for (int i = 0; i < piece.cells.Length; i++)
         {
             Vector3Int tilePosition = piece.cells[i] + position;
 
-            if (!bounds.Contains((Vector2Int)tilePosition))
+            if (!bounds.Contains((Vector2Int)tilePosition))//check inside
             {
                 return false;
             }
 
-            if (this.tilemap.HasTile(tilePosition))
+            if (tilemap.HasTile(tilePosition))
             {
                 return false;
             }
@@ -100,7 +109,7 @@ public class Board : MonoBehaviour
 
     public void ClearLines()
     {
-        RectInt bounds = this.Bounds;
+        RectInt bounds = Bounds;
         int row = bounds.yMin;
 
         while (row < bounds.yMax)
@@ -108,6 +117,8 @@ public class Board : MonoBehaviour
             if (IsLineFull(row))
             {
                 LineClear(row);
+                score += 10;
+                SetScoreText($"Score: {score}");
             }
             else
             {
@@ -118,13 +129,13 @@ public class Board : MonoBehaviour
 
     private bool IsLineFull(int row)
     {
-        RectInt bounds = this.Bounds;
+        RectInt bounds = Bounds;
         
         for (int col = bounds.xMin; col < bounds.xMax; col ++)
         {
             Vector3Int position = new Vector3Int(col, row, 0);
 
-            if (!this.tilemap.HasTile(position))
+            if (!tilemap.HasTile(position))
             {
                 return false;
             }
@@ -135,12 +146,12 @@ public class Board : MonoBehaviour
 
     private void LineClear(int row)
     {
-        RectInt bounds = this.Bounds;
+        RectInt bounds = Bounds;
 
         for (int col = bounds.xMin; col < bounds.xMax; col++)
         {
             Vector3Int position = new Vector3Int(col, row, 0);
-            this.tilemap.SetTile(position, null);
+            tilemap.SetTile(position, null);
         }
 
         while (row < bounds.yMax)
@@ -148,13 +159,18 @@ public class Board : MonoBehaviour
             for (int col = bounds.xMin; col < bounds.xMax; col++)
             {
                 Vector3Int position = new Vector3Int(col, row + 1, 0);
-                TileBase above = this.tilemap.GetTile(position);
+                TileBase above = tilemap.GetTile(position);
 
                 position = new Vector3Int(col, row, 0);
-                this.tilemap.SetTile(position, above);
+                tilemap.SetTile(position, above);
             }
 
             row++;
         }
+    }
+
+    public void SetScoreText(string txt)
+    {
+        text.text = txt;
     }
 }

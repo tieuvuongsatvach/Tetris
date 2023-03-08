@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 
 public class Ghost : MonoBehaviour
 {
@@ -13,10 +14,13 @@ public class Ghost : MonoBehaviour
     public Vector3Int[] cells { get; private set; }
     public Vector3Int position { get; private set; }
 
+
+    [SerializeField] private Text text;
+
     private void Awake()
     {
-        this.tilemap = GetComponentInChildren<Tilemap>();
-        this.cells = new Vector3Int[4];
+        tilemap = GetComponentInChildren<Tilemap>();
+        cells = new Vector3Int[4];
     }
 
     private void LateUpdate()
@@ -29,35 +33,35 @@ public class Ghost : MonoBehaviour
 
     private void Clear()
     {
-        for (int i = 0; i < this.cells.Length; i++)
+        for (int i = 0; i < cells.Length; i++)
         {
-            Vector3Int tilePosition = this.cells[i] + this.position;
-            this.tilemap.SetTile(tilePosition, null);
+            Vector3Int tilePosition = cells[i] + position;
+            tilemap.SetTile(tilePosition, null);
         }
     }
 
     private void Copy()
     {
-        for (int i = 0;i < this.cells.Length; i++)
+        for (int i = 0;i < cells.Length; i++)
         {
-            this.cells[i] = this.trackingPiece.cells[i];
+            cells[i] = trackingPiece.cells[i];
         }
     }
 
     private void Drop()
     {
-        Vector3Int position = this.trackingPiece.position;
+        Vector3Int position = trackingPiece.position;
 
         int current = position.y;
-        int bottom = -this.board.boardSize.y / 2 - 1;
+        int bottom = -board.boardSize.y / 2 - 1;
 
-        this.board.Clear(this.trackingPiece);
+        board.Clear(trackingPiece);
 
         for (int row = current; row >= bottom; row--)
         {
             position.y = row;
             
-            if (this.board.IsValidPosition(this.trackingPiece, position))
+            if (board.IsValidPosition(trackingPiece, position))
             {
                 this.position = position;
             }
@@ -67,15 +71,20 @@ public class Ghost : MonoBehaviour
             }
         }
 
-        this.board.Set(this.trackingPiece);
+        board.Set(trackingPiece);
     }
 
     private void Set()
     {
-        for (int i = 0; i < this.cells.Length; i++)
+        for (int i = 0; i < cells.Length; i++)
         {
-            Vector3Int tilePosition = this.cells[i] + this.position;
-            this.tilemap.SetTile(tilePosition, this.tile);
+            Vector3Int tilePosition = cells[i] + position;
+            tilemap.SetTile(tilePosition, tile);
         }
+    }
+
+    public void SetScoreText(string txt)
+    {
+            text.text = txt;
     }
 }
