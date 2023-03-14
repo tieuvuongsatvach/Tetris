@@ -8,14 +8,11 @@ using UnityEngine.UI;
 public class Board : MonoBehaviour
 {
     [SerializeField] private Text text;
-    private int score;
+    [SerializeField] private TetrominoData[] tetrominos;
 
     public Tilemap tilemap { get; private set; }
     public Piece acctivePiece { get; private set; }
-    [SerializeField] private TetrominoData[] tetrominos;
-    private Vector3Int spawnPosition = new Vector3Int(-1, 8, 0);
     public Vector2Int boardSize { get; private set; } = new Vector2Int(10, 20);
-
     public RectInt Bounds
     {
         get
@@ -24,6 +21,9 @@ public class Board : MonoBehaviour
             return new RectInt(position, boardSize);
         }
     }
+
+    private int score;
+    private Vector3Int spawnPosition = new Vector3Int(-1, 8, 0);
 
     private void Awake()
     {
